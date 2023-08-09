@@ -1,5 +1,4 @@
-"""pact test for user service provider"""
-
+"""pact test for user service client"""
 import logging
 import os
 
@@ -9,6 +8,7 @@ from pact import VerifierV3
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 
 # For the purposes of this example, the broker is started up as a fixture defined
 # in conftest.py. For normal usage this would be self-hosted or using PactFlow.
@@ -22,13 +22,17 @@ else:
     PACT_BROKER_USERNAME = os.getenv("PACT_BROKER_USERNAME", "pactbroker")
     PACT_BROKER_PASSWORD = os.getenv("PACT_BROKER_PASSWORD", "pactbroker")
 
-# For the purposes of this example, the Flask provider will be started up as part
-# of run_pytest.sh when running the tests. Alternatives could be, for example
+# For the purposes of this example, the FastAPI provider will be started up as
+# a fixture in conftest.py ("server"). Alternatives could be, for example
 # running a Docker container with a database of test data configured.
 # This is the "real" provider to verify against.
 PROVIDER_HOST = "127.0.0.1"
-PROVIDER_PORT = 5001
+PROVIDER_PORT = 8000
 PROVIDER_URL = f"http://{PROVIDER_HOST}:{PROVIDER_PORT}"
+
+
+def test_success():
+    pass
 
 
 @pytest.fixture
@@ -42,16 +46,15 @@ def broker_opts():
     }
 
 
-def test_user_service_provider_against_broker(broker_opts):
-    verifier = VerifierV3(provider="UserService", provider_base_url=PROVIDER_URL)
+def test_user_service_provider_against_broker(server, broker_opts):
+    verifier = VerifierV3(provider="UserService",
+                          provider_base_url=PROVIDER_URL)
 
     # Request all Pact(s) from the Pact Broker to verify this Provider against.
     # In the Pact Broker logs, this corresponds to the following entry:
     # PactBroker::Api::Resources::ProviderPactsForVerification -- Fetching pacts for verification by UserService -- {:provider_name=>"UserService", :params=>{}}
     success, logs = verifier.verify_pacts(
         **broker_opts,
-        provider="UserService",
-        provider_base_url=PROVIDER_URL,
         verbose=True,
         provider_states_setup_url=f"{PROVIDER_URL}/_pact/provider_states",
         enable_pending=False,
@@ -74,9 +77,9 @@ def test_user_service_provider_against_broker(broker_opts):
     assert success == 0
 
 
-def test_user_service_provider_against_pact():
-    verifier = VerifierV3(provider="UserService", provider_base_url=PROVIDER_URL)
-
+def test_user_service_provider_against_pact(server):
+    verifier = VerifierV3(provider="UserService",
+                          provider_base_url=PROVIDER_URL)
     # Rather than requesting the Pact interactions from the Pact Broker, this
     # will perform the verification based on the Pact file locally.
     #
@@ -84,35 +87,11 @@ def test_user_service_provider_against_pact():
     # if it has been successful in the past (since this is what the Pact Broker
     # is for), if the verification of an interaction fails then the success
     # result will be != 0, and so the test will FAIL.
-    success, _ = verifier.verify_pacts(
-        sources=[os.path.abspath("../pacts/userserviceclient-userservice.json")],
-        provider="UserService",
-        provider_base_url=PROVIDER_URL,
+    output, _ = verifier.verify_pacts(
+        sources=["../../pacts/userserviceclient-userservice.json"],
         verbose=False,
         provider_states_setup_url="{}/_pact/provider_states".format(PROVIDER_URL),
         state_change_as_query=True
     )
 
-    assert success == 0
-
-def test_user_service_provider_against_pact_url(broker_opts):
-    verifier = VerifierV3(provider="UserService", provider_base_url=PROVIDER_URL)
-
-    # Rather than requesting the Pact interactions from the Pact Broker, this
-    # will perform the verification based on the Pact file locally.
-    #
-    # Because there is no way of knowing the previous state of an interaction,
-    # if it has been successful in the past (since this is what the Pact Broker
-    # is for), if the verification of an interaction fails then the success
-    # result will be != 0, and so the test will FAIL.
-    success, _ = verifier.verify_pacts(
-        sources=[f"{PACT_BROKER_URL}/pacts/provider/UserService/consumer/UserServiceClient/latest"],
-        **broker_opts,
-        provider="UserService",
-        provider_base_url=PROVIDER_URL,
-        log_level='DEBUG',
-        provider_states_setup_url="{}/_pact/provider_states".format(PROVIDER_URL),
-        state_change_as_query=True
-    )
-
-    assert success == 0
+    assert output == 0

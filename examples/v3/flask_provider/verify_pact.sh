@@ -24,7 +24,7 @@ then
   pact-verifier \
     --provider-base-url=http://localhost:5001 \
     --provider-states-setup-url=http://localhost:5001/_pact/provider_states \
-    ../pacts/userserviceclient-userservice.json
+    ../../pacts/userserviceclient-userservice.json
 else
   echo "Validating against Pact Broker"
 

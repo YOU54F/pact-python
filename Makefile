@@ -18,6 +18,14 @@ help:
 	@echo "  messaging  to run the example messaging e2e tests"
 	@echo "  grpc       to run the example grpc e2e tests"
 	@echo "  todo		to run the example todo tests"
+	@echo "  examples_v3   to run the example end to end tests (consumer_v3, fastapi_v3, flask_v3, messaging_v3)"
+	@echo "  consumer_v3   to run the example consumer V3 tests"
+	@echo "  fastapi_v3    to run the example FastApi V3  provider tests"
+	@echo "  flask_v3      to run the example Flask V3  provider tests"
+	@echo "  messaging_v3  to run the example messaging V3 e2e tests"
+	@echo "  examples_v4   to run the example end to end tests (grpc_v4)"
+	@echo "  grpc_v4       to run the example grpc V4 e2e tests"
+	@echo "  todo		to run the example todo tests"
 	@echo "  package    to create a distribution package in /dist/"
 	@echo "  release    to perform a release build, including deps, test, and package targets"
 	@echo "  test       to run all tests"
@@ -80,24 +88,63 @@ define MESSAGING
 endef
 export MESSAGING
 
-define GRPC
-	echo "grpc make"
-	cd examples/grpc
+define CONSUMER_V3
+	echo "consumer make"
+	cd examples/v3/consumer
 	pip install -q -r requirements.txt
-	pip install -e ../../
+	pip install -e ../../../
 	./run_pytest.sh
 endef
-export GRPC
+export CONSUMER_V3
 
-define TODO
+
+define FLASK_PROVIDER_V3
+	echo "flask make"
+	cd examples/v3/flask_provider
+	pip install -q -r requirements.txt
+	pip install -e ../../../
+	./run_pytest.sh
+endef
+export FLASK_PROVIDER_V3
+
+
+define FASTAPI_PROVIDER_V3
+	echo "fastapi make"
+	cd examples/v3/fastapi_provider
+	pip install -q -r requirements.txt
+	pip install -e ../../../
+	./run_pytest.sh
+endef
+export FASTAPI_PROVIDER_V3
+
+
+define MESSAGING_V3
+	echo "messaging make"
+	cd examples/v3/message
+	pip install -q -r requirements.txt
+	pip install -e ../../../
+	./run_pytest.sh
+endef
+export MESSAGING_V3
+
+
+define TODO_V3
 	echo "todo make"
-	cd examples/todo
+	cd examples/v3/todo
 	pip install -r requirements.txt
-	pip install -e ../../
+	pip install -e ../../../
 	./run_pytest.sh
 endef
-export TODO
+export TODO_V3
 
+define GRPC_V4
+	echo "grpc make"
+	cd examples/v4/grpc
+	pip install -q -r requirements.txt
+	pip install -e ../../../
+	./run_pytest.sh
+endef
+export GRPC_V4
 
 .PHONY: consumer
 consumer:
@@ -118,17 +165,40 @@ fastapi:
 messaging:
 	bash -c "$$MESSAGING"
 
-.PHONY: grpc
-grpc:
-	bash -c "$$GRPC"
 
-.PHONY: todo
-todo:
-	bash -c "$$TODO"
+.PHONY: consumer_v3
+consumer_v3:
+	bash -c "$$CONSUMER_V3"
+
+
+.PHONY: flask_v3
+flask_v3:
+	bash -c "$$FLASK_PROVIDER_V3"
+
+
+.PHONY: fastapi_v3
+fastapi_v3:
+	bash -c "$$FASTAPI_PROVIDER_V3"
+
+
+.PHONY: messaging_v3
+messaging_v3:
+	bash -c "$$MESSAGING_V3"
+
+.PHONY: todo_v3
+todo_v3:
+	bash -c "$$TODO_V3"
+
+.PHONY: grpc
+grpc_v4:
+	bash -c "$$GRPC_V4"
+
 
 
 .PHONY: examples
-examples: consumer flask fastapi messaging grpc todo
+examples: consumer flask fastapi messaging grpc
+examples_v3: consumer_v3 flask_v3 fastapi_v3 messaging_v3 todo_v3
+examples_v4: grpc_v4
 # examples: consumer flask fastapi messaging todo
 
 
@@ -139,7 +209,7 @@ package:
 
 .PHONY: test
 test: deps
-	flake8 --exclude examples/area_calculator/area_calculator_pb2.py,examples/area_calculator/area_calculator_pb2_grpc.py
+	flake8 --exclude '*pb2*',.git,__pycache__,build,dist,.tox --show-source
 	pydocstyle pact
 	coverage erase
 	tox

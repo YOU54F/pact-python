@@ -3,11 +3,11 @@ import os
 from mock import patch, Mock
 from unittest import TestCase
 
-from pact.message_provider import MessageProvider
-from pact import message_provider as message_provider
+from pact.message_provider_v3 import MessageProviderV3
+from pact import message_provider_v3
 
 
-class MessageProviderTestCase(TestCase):
+class MessageProviderV3TestCase(TestCase):
     def _mock_response(
             self,
             status=200,
@@ -27,7 +27,7 @@ class MessageProviderTestCase(TestCase):
         return {'success': True}
 
     def setUp(self):
-        self.provider = MessageProvider(
+        self.provider = MessageProviderV3(
             provider='DocumentService',
             consumer='DetectContentLambda',
             message_providers={
@@ -43,39 +43,44 @@ class MessageProviderTestCase(TestCase):
         }
 
     def test_init(self):
-        self.assertIsInstance(self.provider, MessageProvider)
+        self.assertIsInstance(self.provider, MessageProviderV3)
         self.assertEqual(self.provider.provider, 'DocumentService')
         self.assertEqual(self.provider.consumer, 'DetectContentLambda')
         self.assertEqual(self.provider.pact_dir, os.getcwd())
         self.assertEqual(self.provider.version, '3.0.0')
-        self.assertEqual(self.provider.proxy_host, 'localhost')
+        self.assertEqual(self.provider.proxy_host, '127.0.0.1')
         self.assertEqual(self.provider.proxy_port, '1234')
 
-    @patch('pact.Verifier.verify_pacts', return_value=(0, 'logs'))
+    @patch('pact.verifier_v3.VerifierV3.verify_pacts', return_value=(0, 'logs'))
     def test_verify(self, mock_verify_pacts):
         self.provider.verify()
 
         assert mock_verify_pacts.call_count == 1
-        mock_verify_pacts.assert_called_with(f'{self.provider.pact_dir}/{self.provider._pact_file()}')
+        mock_verify_pacts.assert_called_with(sources=[f'{self.provider.pact_dir}/{self.provider._pact_file()}'],
+                                             )
 
-    @patch('pact.Verifier.verify_with_broker', return_value=(0, 'logs'))
+    @patch('pact.verifier_v3.VerifierV3.verify_pacts', return_value=(0, 'logs'))
     def test_verify_with_broker(self, mock_verify_pacts):
         self.provider.verify_with_broker(**self.options)
 
         assert mock_verify_pacts.call_count == 1
-        mock_verify_pacts.assert_called_with(False, None, broker_username="test",
-                                             broker_password="test",
-                                             broker_url="http://localhost",
-                                             publish_version='3',
-                                             publish_verification_results=False)
+        mock_verify_pacts.assert_called_with(
+            enable_pending=False,
+            include_wip_pacts_since=None,
+            broker_username="test",
+            broker_password="test",
+            broker_url="http://localhost",
+            publish_version='3',
+            publish_verification_results=False
+        )
 
 
-class MessageProviderContextManagerTestCase(MessageProviderTestCase):
+class MessageProviderV3ContextManagerTestCase(MessageProviderV3TestCase):
     def setUp(self):
-        super(MessageProviderContextManagerTestCase, self).setUp()
+        super(MessageProviderV3ContextManagerTestCase, self).setUp()
 
-    @patch('pact.MessageProvider._start_proxy', return_value=0)
-    @patch('pact.MessageProvider._stop_proxy', return_value=0)
+    @patch('pact.MessageProviderV3._start_proxy', return_value=0)
+    @patch('pact.MessageProviderV3._stop_proxy', return_value=0)
     def test_successful(self, mock_stop_proxy, mock_start_proxy):
         with self.provider:
             pass
@@ -83,9 +88,9 @@ class MessageProviderContextManagerTestCase(MessageProviderTestCase):
         mock_start_proxy.assert_called_once()
         mock_stop_proxy.assert_called_once()
 
-    @patch('pact.MessageProvider._wait_for_server_start', side_effect=RuntimeError('boom!'))
-    @patch('pact.MessageProvider._start_proxy', return_value=0)
-    @patch('pact.MessageProvider._stop_proxy', return_value=0)
+    @patch('pact.MessageProviderV3._wait_for_server_start', side_effect=RuntimeError('boom!'))
+    @patch('pact.MessageProviderV3._start_proxy', return_value=0)
+    @patch('pact.MessageProviderV3._stop_proxy', return_value=0)
     def test_stop_proxy_on_runtime_error(self, mock_stop_proxy, mock_start_proxy, mock_wait_for_server_start,):
         with self.provider:
             pass
@@ -94,12 +99,12 @@ class MessageProviderContextManagerTestCase(MessageProviderTestCase):
         mock_stop_proxy.assert_called_once()
 
 
-class StartProxyTestCase(MessageProviderTestCase):
+class StartProxyTestCase(MessageProviderV3TestCase):
     def setUp(self):
         super(StartProxyTestCase, self).setUp()
 
 
-class StopProxyTestCase(MessageProviderTestCase):
+class StopProxyTestCase(MessageProviderV3TestCase):
     def setUp(self):
         super(StopProxyTestCase, self).setUp()
 
@@ -109,7 +114,7 @@ class StopProxyTestCase(MessageProviderTestCase):
         self.provider._stop_proxy()
 
 
-class SetupStateTestCase(MessageProviderTestCase):
+class SetupStateTestCase(MessageProviderV3TestCase):
     def setUp(self):
         super(SetupStateTestCase, self).setUp()
 
@@ -126,14 +131,14 @@ class SetupStateTestCase(MessageProviderTestCase):
         mock_requests.assert_called_once_with(f'{self.provider._proxy_url()}/setup', verify=False, json=expected_payload)
 
 
-class WaitForServerStartTestCase(MessageProviderTestCase):
+class WaitForServerStartTestCase(MessageProviderV3TestCase):
     def setUp(self):
         super(WaitForServerStartTestCase, self).setUp()
 
-    @patch.object(message_provider.requests, 'Session')
-    @patch.object(message_provider, 'Retry')
-    @patch.object(message_provider, 'HTTPAdapter')
-    @patch('pact.MessageProvider._stop_proxy')
+    @patch.object(message_provider_v3.requests, 'Session')
+    @patch.object(message_provider_v3, 'Retry')
+    @patch.object(message_provider_v3, 'HTTPAdapter')
+    @patch('pact.MessageProviderV3._stop_proxy')
     def test_wait_for_server_start_success(self, mock_stop_proxy, mock_HTTPAdapter, mock_Retry, mock_Session):
         mock_Session.return_value.get.return_value.status_code = 200
         self.provider._wait_for_server_start()
@@ -147,10 +152,10 @@ class WaitForServerStartTestCase(MessageProviderTestCase):
         mock_Retry.assert_called_once_with(total=9, backoff_factor=0.5)
         mock_stop_proxy.assert_not_called()
 
-    @patch.object(message_provider.requests, 'Session')
-    @patch.object(message_provider, 'Retry')
-    @patch.object(message_provider, 'HTTPAdapter')
-    @patch('pact.MessageProvider._stop_proxy')
+    @patch.object(message_provider_v3.requests, 'Session')
+    @patch.object(message_provider_v3, 'Retry')
+    @patch.object(message_provider_v3, 'HTTPAdapter')
+    @patch('pact.MessageProviderV3._stop_proxy')
     def test_wait_for_server_start_failure(self, mock_stop_proxy, mock_HTTPAdapter, mock_Retry, mock_Session):
         mock_Session.return_value.get.return_value.status_code = 500
 

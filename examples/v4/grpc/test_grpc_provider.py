@@ -24,7 +24,7 @@ def test_grpc_local_pact():
                           provider_base_url="tcp://127.0.0.1:37757",
                           )
     result = verifier.verify_pacts(
-        sources=["../pacts/grpc-consumer-python-area-calculator-provider.json"],
+        sources=["../../pacts/grpc-consumer-python-area-calculator-provider.json"],
     )
     grpc_server_process.terminate()
     assert VerifyStatus(result.return_code) == VerifyStatus.SUCCESS

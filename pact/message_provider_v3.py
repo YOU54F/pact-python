@@ -1,5 +1,4 @@
 """Contract Message Provider."""
-
 import os
 import time
 
@@ -7,18 +6,19 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3 import Retry
 from multiprocessing import Process
-from .verifier import Verifier
+from pact.ffi.verifier import VerifyResult
+from pact.verifier_v3 import VerifierV3
 from .http_proxy import run_proxy
 
 import logging
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 
-class MessageProvider(object):
+class MessageProviderV3(object):
     """
     A Pact message provider.
 
-    provider = MessageProvider(
+    provider = MessageProviderV3(
         message_providers = {
             "a document created successfully": handler
         },
@@ -35,8 +35,9 @@ class MessageProvider(object):
         consumer,
         pact_dir=os.getcwd(),
         version="3.0.0",
-        proxy_host='localhost',
-        proxy_port='1234'
+        proxy_host='127.0.0.1',
+        proxy_port='1234',
+        **kwargs
     ):
         """Create a Message Provider instance."""
         self.message_providers = message_providers
@@ -108,15 +109,15 @@ class MessageProvider(object):
         if isinstance(self._process, Process):
             self._wait_for_server_stop()
 
-    def verify(self, *pacts, **kwargs):
+    def verify(self, **kwargs):
         """Verify pact files with executable verifier."""
-        if len(pacts) == 0:
-            pacts = [f'{self.pact_dir}/{self._pact_file()}']
-
-        verifier = Verifier(provider=self.provider,
-                            provider_base_url=self._proxy_url())
-        return_code, _ = verifier.verify_pacts(*pacts, **kwargs)
-        assert (return_code == 0), f'Expected returned_code = 0, actual = {return_code}'
+        pact_files = f'{self.pact_dir}/{self._pact_file()}'
+        verifier = VerifierV3(provider=self.provider,
+                              provider_base_url=self._proxy_url(),
+                              )
+        return_code, logs = verifier.verify_pacts(sources=[pact_files],
+                                                  **kwargs)
+        return VerifyResult(return_code, logs)
 
     def verify_with_broker(self, enable_pending=False, include_wip_pacts_since=None, **kwargs):
         """Use Broker to verify.
@@ -125,17 +126,20 @@ class MessageProvider(object):
             broker_username ([String]): broker username
             broker_password ([String]): broker password
             broker_url ([String]): url of broker
-            enable_pending ([Boolean])
-            include_wip_pacts_since ([String])
-            publish_version ([String])
+            enable_pending ([Boolean]): enable pending pacts
+            include_wip_pacts_since ([String]): include wip pacts since
+            publish_version ([String]): publish version
+            pacts ([String]): pacts to verify
 
         """
-        verifier = Verifier(provider=self.provider,
-                            provider_base_url=self._proxy_url())
+        verifier = VerifierV3(provider=self.provider,
+                              provider_base_url=self._proxy_url(),
+                              )
+        return_code, logs = verifier.verify_pacts(enable_pending=enable_pending,
+                                                  include_wip_pacts_since=include_wip_pacts_since,
+                                                  **kwargs)
 
-        return_code, _ = verifier.verify_with_broker(enable_pending, include_wip_pacts_since, **kwargs)
-
-        assert (return_code == 0), f'Expected returned_code = 0, actual = {return_code}'
+        return VerifyResult(return_code, logs)
 
     def __enter__(self):
         """

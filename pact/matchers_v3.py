@@ -1,6 +1,7 @@
 """Classes for defining request and response data that is variable for the V3 Pact Spec."""
 # from pact_python_v3 import generate_datetime_string
 import datetime
+import six
 
 from enum import Enum
 
@@ -180,6 +181,27 @@ class Regex(V3Matcher):
             "value": self._generate
         }
 
+def from_term_v3(term):
+    """
+    Parse the provided term into the JSON for the mock service.
+
+    :param term: The term to be parsed.
+    :type term: None, list, dict, int, float, str, bytes, unicode, Matcher
+    :return: The JSON representation for this term.
+    :rtype: dict, list, str
+    """
+    if term is None:
+        return term
+    elif isinstance(term, (six.string_types, six.binary_type, int, float)):
+        return term
+    elif isinstance(term, dict):
+        return {k: from_term_v3(v) for k, v in term.items()}
+    elif isinstance(term, list):
+        return [from_term_v3(t) for i, t in enumerate(term)]
+    elif issubclass(term.__class__, (V3Matcher,)):
+        return term.generate()
+    else:
+        raise ValueError('Unknown type: %s' % type(term))
 # class DateTime(V3Matcher):
 #     """String value that must match the provided datetime format string."""
 

@@ -28,7 +28,7 @@ def broker(request):
     if run_broker:
         # Start up the broker using docker-compose
         print("Starting broker")
-        with DockerCompose("../broker", compose_file_name=["docker-compose.yml"], pull=True) as compose:
+        with DockerCompose(join(dirname(__file__), '..', 'broker'), compose_file_name=["docker-compose.yml"], pull=True) as compose:
             stdout, stderr = compose.get_logs()
             if stderr:
                 print("Errors\\n:{}".format(stderr))
@@ -64,7 +64,7 @@ def publish_existing_pact(broker):
     if int(getenv('SKIP_PUBLISH', '1')) == 0:
         return
 
-    source = str(pathlib.Path.cwd().joinpath("..", "pacts").resolve())
+    source = join(dirname(__file__),"..", "pacts")
     pacts = [f"{source}:/pacts"]
 
     use_hosted_pact_broker = int(getenv('USE_HOSTED_PACT_BROKER', '0'))
@@ -97,7 +97,7 @@ def publish_existing_pact(broker):
             envs["PACT_BROKER_BASE_URL"] = "http://localhost"
         result = subprocess.run([join(dirname(__file__), '..', '..', 'pact', 'bin', 'pact', 'bin', executable),
                                  'publish',
-                                 join('..', 'pacts'),
+                                 join(dirname(__file__),'..', 'pacts'),
                                  '--consumer-app-version', '1',
                                  '--broker-base-url', envs["PACT_BROKER_BASE_URL"],
                                  '--broker-username', envs["PACT_BROKER_USERNAME"],

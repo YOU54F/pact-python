@@ -64,8 +64,7 @@
                 }
               ]
             }
-          },
-          "header": {}
+          }
         },
         "method": "POST",
         "path": "/api/books"
@@ -82,7 +81,7 @@
           "title": "Voluptas et tempora repellat corporis excepturi."
         },
         "headers": {
-          "Content-Type": "application/ld+json; charset=utf-8"
+          "Content-Type": "application/json, application/ld+json; charset=utf-8"
         },
         "matchingRules": {
           "body": {
