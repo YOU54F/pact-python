@@ -196,7 +196,7 @@ grpc_v4:
 
 
 .PHONY: examples
-examples: consumer flask fastapi messaging grpc
+examples: consumer flask fastapi messaging
 examples_v3: consumer_v3 flask_v3 fastapi_v3 messaging_v3 todo_v3
 examples_v4: grpc_v4
 # examples: consumer flask fastapi messaging todo
