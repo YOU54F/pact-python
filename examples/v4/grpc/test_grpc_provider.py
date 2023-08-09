@@ -14,17 +14,13 @@ def test_grpc_local_pact():
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT, universal_newlines=True)
 
-    # grpc_server_process = subprocess.Popen(['python', 'area_calculator_server.py'],
-    #                                        cwd=join(dirname(__file__), '..', '..', 'examples', 'area_calculator'),
-    #                                        stdout=subprocess.PIPE,
-    #                                        stderr=subprocess.STDOUT, universal_newlines=True)
     sleep(3)
 
     verifier = VerifierV3(provider="area-calculator-provider-example",
                           provider_base_url="tcp://127.0.0.1:37757",
                           )
     result = verifier.verify_pacts(
-        sources=["../../pacts/grpc-consumer-python-area-calculator-provider.json"],
+        sources=["../pacts/grpc-consumer-python-area-calculator-provider.json"],
     )
     grpc_server_process.terminate()
     assert VerifyStatus(result.return_code) == VerifyStatus.SUCCESS

@@ -8,7 +8,7 @@ import time
 from os import remove
 from os.path import isfile
 
-from pact import MessageConsumer, Provider
+from pact import MessageConsumerV3, Provider
 from src.message_handler import MessageHandler, CustomError
 
 log = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ else:
 
 PACT_DIR = "pacts"
 
-CONSUMER_NAME = "DetectContentLambda"
-PROVIDER_NAME = "ContentProvider"
+CONSUMER_NAME = "DetectContentLambdaV3"
+PROVIDER_NAME = "ContentProviderV3"
 PACT_FILE = (f"{PACT_DIR}/{CONSUMER_NAME.lower().replace(' ', '_')}-"
              + f"{PROVIDER_NAME.lower().replace(' ', '_')}.json")
 
@@ -37,7 +37,7 @@ def pact(request):
     version = request.config.getoption("--publish-pact")
     publish = True if version else False
 
-    pact = MessageConsumer(CONSUMER_NAME, version=version).has_pact_with(
+    pact = MessageConsumerV3(CONSUMER_NAME, version=version).has_pact_with(
         Provider(PROVIDER_NAME),
         publish_to_broker=publish, broker_base_url=PACT_BROKER_URL,
         broker_username=PACT_BROKER_USERNAME, broker_password=PACT_BROKER_PASSWORD, pact_dir=PACT_DIR)
@@ -48,7 +48,7 @@ def pact(request):
 @pytest.fixture(scope="session")
 def pact_no_publish(request):
     version = request.config.getoption("--publish-pact")
-    pact = MessageConsumer(CONSUMER_NAME, version=version).has_pact_with(
+    pact = MessageConsumerV3(CONSUMER_NAME, version=version).has_pact_with(
         Provider(PROVIDER_NAME),
         publish_to_broker=False, broker_base_url=PACT_BROKER_URL,
         broker_username=PACT_BROKER_USERNAME, broker_password=PACT_BROKER_PASSWORD, pact_dir=PACT_DIR)

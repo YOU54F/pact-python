@@ -1,9 +1,9 @@
 {
   "consumer": {
-    "name": "DetectContentLambda"
+    "name": "DetectContentLambdaV3"
   },
   "provider": {
-    "name": "ContentProvider"
+    "name": "ContentProviderV3"
   },
   "messages": [
     {

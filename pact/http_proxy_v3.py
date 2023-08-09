@@ -35,7 +35,7 @@ async def root(request: Request, response: Response):
     # TODO:- Read message metadata from request, parse as json
     # and base64 encode - the example below is {"Content-Type": "application/json"}
     # https://github.com/pact-foundation/pact-reference/tree/master/rust/pact_verifier_cli#verifying-metadata
-    # response.headers["Pact-Message-Metadata"] = "eyJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiJ9Cg=="
+    response.headers["Pact-Message-Metadata"] = "eyJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiJ9Cg=="
     return message
 
 @app.get('/ping', status_code=status.HTTP_200_OK)
@@ -55,6 +55,6 @@ async def setup(request: Request):
     return items["states"]
 
 
-def run_proxy():
+def run_proxy_v3():
     """Run HTTP Proxy."""
-    uvicorn.run("pact.http_proxy:app", port=PROXY_PORT, log_level=UVICORN_LOGGING_LEVEL)
+    uvicorn.run("pact.http_proxy_v3:app", port=PROXY_PORT, log_level=UVICORN_LOGGING_LEVEL)

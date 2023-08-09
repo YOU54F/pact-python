@@ -35,9 +35,9 @@ class MessageProviderTestCase(TestCase):
             }
         )
         self.options = {
+            "broker_url": "http://localhost",
             'broker_username': "test",
             'broker_password': "test",
-            'broker_url': "http://localhost",
             'publish_version': '3',
             'publish_verification_results': False
         }
@@ -63,11 +63,14 @@ class MessageProviderTestCase(TestCase):
         self.provider.verify_with_broker(**self.options)
 
         assert mock_verify_pacts.call_count == 1
-        mock_verify_pacts.assert_called_with(False, None, broker_username="test",
-                                             broker_password="test",
-                                             broker_url="http://localhost",
-                                             publish_version='3',
-                                             publish_verification_results=False)
+        mock_verify_pacts.assert_called_with(
+            enable_pending=False,
+            include_wip_pacts_since=None,
+            broker_username="test",
+            broker_password="test",
+            broker_url="http://localhost",
+            publish_version='3',
+            publish_verification_results=False)
 
 
 class MessageProviderContextManagerTestCase(MessageProviderTestCase):
@@ -86,7 +89,7 @@ class MessageProviderContextManagerTestCase(MessageProviderTestCase):
     @patch('pact.MessageProvider._wait_for_server_start', side_effect=RuntimeError('boom!'))
     @patch('pact.MessageProvider._start_proxy', return_value=0)
     @patch('pact.MessageProvider._stop_proxy', return_value=0)
-    def test_stop_proxy_on_runtime_error(self, mock_stop_proxy, mock_start_proxy, mock_wait_for_server_start,):
+    def test_stop_proxy_on_runtime_error(self, mock_stop_proxy, mock_start_proxy, mock_wait_for_server_start):
         with self.provider:
             pass
 

@@ -48,27 +48,25 @@ class PactV3(object):
     def with_request(self, method='GET', path='/', query=None, headers=None, body=None):
         """Define the request that the client is expected to perform."""
         self.pact.with_request(self.interactions[0], method, path)
-        # index = 0
         if headers is not None:
             for header in headers:
                 print(header['name'])
                 print(header['value'])
-                # TODO:- deal with multi-value headers and increment the header value appropriately
                 self.pact.with_response_header(self.interactions[0], header['name'], 0, header['value'])
-                # index += 1
                 if header['name'] in ['Content-Type', 'content-type']:
                     content_type = header['value']
 
         if body is not None:
             self.pact.with_request_body(self.interactions[0], content_type, self.__process_body(body))
-        # TODO Add query header
-        # self.pact.with_request(method, path, query, headers, self.__process_body(body))
+        # TODO process matchers query header
+        if query is not None:
+            for i, params in enumerate(query):
+                self.pact.with_query_param(self.interactions[0], params[0], i, params[1])
         return self
 
     def with_request_with_binary_file(self, method='POST', path='/', query=None, headers=None, file=None):
         """Define the request that the client is expected to perform."""
         self.pact.with_request(self.interactions[0], method, path)
-        # index = 0
         if headers is not None:
             for header in headers:
                 print(header['name'])
@@ -82,8 +80,10 @@ class PactV3(object):
             with open(file, 'rb') as f:
                 file_content = f.read()  # Read whole file in the file_content string
             self.pact.with_binary_file(self.interactions[0], "req", content_type, self.__process_body(file_content))
-        # TODO Add query header
-        # self.pact.with_request(method, path, query, headers, self.__process_body(body))
+        # TODO process matchers query header
+        if query is not None:
+            for i, params in enumerate(query):
+                self.pact.with_query_param(self.interactions[0], params[0], i, params[1])
         return self
 
     def will_respond_with(self, status=200, headers: [CustomHeader] = None, body=None):

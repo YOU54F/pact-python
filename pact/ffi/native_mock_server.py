@@ -204,6 +204,45 @@ class MockServer(PactFFI):
         """
         return self.lib.pactffi_with_header_v2(interaction_handle, 0 if req_or_res == 'req' else 1, se(name), index, se(value))
 
+    def with_query_param(self, interaction_handle, name=str, index=int, value=str):
+        r"""
+        Configure a query parameter for the Interaction.
+
+        Returns false if the interaction or Pact can't be modified (i.e. the mock server for it has already started)
+
+        * `name` - the query parameter name.
+        * `value` - the query parameter value. Either a simple string or a JSON document.
+        * `index` - the index of the value (starts at 0). You can use this to create a query parameter with multiple values
+
+        To setup a query parameter with multiple values, you can either call this function multiple times
+        with a different index value, i.e. to create `id=2&id=3`
+
+        ```c
+        pactffi_with_query_parameter_v2(handle, "id", 0, "2");
+        pactffi_with_query_parameter_v2(handle, "id", 1, "3");
+        ```
+
+        Or you can call it once with a JSON value that contains multiple values:
+
+        ```c
+        const char* value = "{\"value\": [\"2\",\"3\"]}";
+        pactffi_with_query_parameter_v2(handle, "id", 0, value);
+        ```
+
+        To include matching rules for the query parameter, include the matching rule JSON format with
+        the value as a single JSON document. I.e.
+
+        ```c
+        const char* value = "{\"value\":\"2\", \"pact:matcher:type\":\"regex\", \"regex\":\"\\\\d+\"}";
+        pactffi_with_query_parameter_v2(handle, "id", 0, value);
+        ```
+        See [IntegrationJson.md](https://github.com/pact-foundation/pact-reference/blob/master/rust/pact_ffi/IntegrationJson.md)
+
+        # Safety
+        The name and value parameters must be valid pointers to NULL terminated strings.
+        """
+        return self.lib.pactffi_with_query_parameter_v2(interaction_handle, se(name), index, se(value))
+
     def with_request_header(self, interaction_handle, name=str, index=int, value=str):
         """
         Configure a request header for the Interaction.

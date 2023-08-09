@@ -15,11 +15,8 @@ class TodoConsumer(object):
         """Fetch all the projects from the server. Supports XML and JSON formats"""
         uri = self.base_uri + '/projects'
         response = requests.get(uri,
-                                headers={'Accept': 'application/' + format})
-        # TODO add query param support in PactV3 interface
-        # response = requests.get(uri,
-        #                         headers={'Accept': 'application/' + format},
-        #                         params={'from': 'today'})
+                                headers={'Accept': 'application/' + format},
+                                params={'from': 'today'})
         response.raise_for_status()
         if format == 'json':
             print(f'returning json: {response.json()}')

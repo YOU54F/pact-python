@@ -48,8 +48,8 @@ def test_verify_success():
             'A document created successfully': document_created_handler,
             'A document deleted successfully': document_deleted_handler
         },
-        provider='ContentProvider',
-        consumer='DetectContentLambda',
+        provider='ContentProviderV3',
+        consumer='DetectContentLambdaV3',
         pact_dir='pacts'
 
     )
@@ -63,8 +63,8 @@ def test_verify_failure_when_a_handler_missing():
         message_providers={
             'A document created successfully': document_created_handler,
         },
-        provider='ContentProvider',
-        consumer='DetectContentLambda',
+        provider='ContentProviderV3',
+        consumer='DetectContentLambdaV3',
         pact_dir='pacts'
 
     )
@@ -79,13 +79,13 @@ def test_verify_from_pact_url(default_opts):
             'A document created successfully': document_created_handler,
             'A document deleted successfully': document_deleted_handler
         },
-        provider='ContentProvider',
-        consumer='DetectContentLambda',
+        provider='ContentProviderV3',
+        consumer='DetectContentLambdaV3',
     )
 
     with provider:
         success, logs = provider.verify(
-            "http://localhost/pacts/provider/ContentProvider/consumer/DetectContentLambda/latest",
+            f"{PACT_BROKER_URL}/pacts/provider/ContentProviderV3/consumer/DetectContentLambdaV3/latest",
             **default_opts
         )
         assert success == 0
@@ -96,8 +96,8 @@ def test_verify_from_broker(default_opts):
             'A document created successfully': document_created_handler,
             'A document deleted successfully': document_deleted_handler
         },
-        provider='ContentProvider',
-        consumer='DetectContentLambda',
+        provider='ContentProviderV3',
+        consumer='DetectContentLambdaV3',
     )
 
     with provider:

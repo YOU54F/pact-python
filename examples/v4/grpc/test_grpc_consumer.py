@@ -5,11 +5,11 @@ import pytest
 from sys import version_info
 if version_info < (3, 7):
     try:
-        from examples.grpc.area_calculator_client import get_rectangle_area
+        from examples.v4.grpc.area_calculator_client import get_rectangle_area
     except ImportError:
         print("Skipping import for Python 3.6 due to protobuf error")
 else:
-    from examples.grpc.area_calculator_client import get_rectangle_area
+    from examples.v4.grpc.area_calculator_client import get_rectangle_area
 
 @pytest.mark.skipif(
     version_info < (3, 7),
@@ -25,7 +25,7 @@ def test_ffi_grpc_consumer():
 
     # our interaction contents
     contents = {
-        "pact:proto": os.path.abspath('../proto/area_calculator.proto'),
+        "pact:proto": os.path.abspath('./proto/area_calculator.proto'),
         "pact:proto-service": 'Calculator/calculateOne',
         "pact:content-type": 'application/protobuf',
         "request": {

@@ -8,7 +8,7 @@ from requests.packages.urllib3 import Retry
 from multiprocessing import Process
 from pact.ffi.verifier import VerifyResult
 from pact.verifier_v3 import VerifierV3
-from .http_proxy_v3 import run_proxy
+from .http_proxy_v3 import run_proxy_v3
 
 import logging
 logging.getLogger("urllib3").setLevel(logging.ERROR)
@@ -99,7 +99,7 @@ class MessageProviderV3(object):
                 retry -= 1
 
     def _start_proxy(self):
-        self._process = Process(target=run_proxy, args=(), daemon=True)
+        self._process = Process(target=run_proxy_v3, args=(), daemon=True)
         self._process.start()
         self._wait_for_server_start()
         self._setup_states()

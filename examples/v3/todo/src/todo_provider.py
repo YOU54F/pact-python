@@ -13,7 +13,7 @@ def create_app():
 
     @app.route('/projects')
     def projects():
-        # TODO:- Updated response to matche consumer req for xml
+        # TODO:- Updated response to match consumer req for xml
         # should use provider states here or matchers
         todo_response = [
             {

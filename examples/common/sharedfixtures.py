@@ -1,7 +1,6 @@
 from os.path import join, dirname
 from os import getenv
 import platform
-import pathlib
 import subprocess
 
 import docker
@@ -64,7 +63,7 @@ def publish_existing_pact(broker):
     if int(getenv('SKIP_PUBLISH', '1')) == 0:
         return
 
-    source = join(dirname(__file__),"..", "pacts")
+    source = join(dirname(__file__), "..", "pacts")
     pacts = [f"{source}:/pacts"]
 
     use_hosted_pact_broker = int(getenv('USE_HOSTED_PACT_BROKER', '0'))
@@ -97,7 +96,7 @@ def publish_existing_pact(broker):
             envs["PACT_BROKER_BASE_URL"] = "http://localhost"
         result = subprocess.run([join(dirname(__file__), '..', '..', 'pact', 'bin', 'pact', 'bin', executable),
                                  'publish',
-                                 join(dirname(__file__),'..', 'pacts'),
+                                 join(dirname(__file__), '..', 'pacts'),
                                  '--consumer-app-version', '1',
                                  '--broker-base-url', envs["PACT_BROKER_BASE_URL"],
                                  '--broker-username', envs["PACT_BROKER_USERNAME"],

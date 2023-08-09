@@ -6,7 +6,6 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3 import Retry
 from multiprocessing import Process
-from pact.ffi.verifier import VerifyResult
 from pact.verifier import Verifier
 from .http_proxy import run_proxy
 
@@ -115,10 +114,10 @@ class MessageProvider(object):
             pacts = [f'{self.pact_dir}/{self._pact_file()}']
         # pact_files = f'{self.pact_dir}/{self._pact_file()}'
         verifier = Verifier(provider=self.provider,
-                              provider_base_url=self._proxy_url(),
-                              )
+                            provider_base_url=self._proxy_url(),
+                            )
         return_code, _ = verifier.verify_pacts(*pacts,
-                                                  **kwargs)
+                                               **kwargs)
         assert (return_code == 0), f'Expected returned_code = 0, actual = {return_code}'
 
     def verify_with_broker(self, enable_pending=False, include_wip_pacts_since=None, **kwargs):
@@ -135,11 +134,11 @@ class MessageProvider(object):
 
         """
         verifier = Verifier(provider=self.provider,
-                              provider_base_url=self._proxy_url(),
-                              )
+                            provider_base_url=self._proxy_url(),
+                            )
         return_code, _ = verifier.verify_with_broker(enable_pending=enable_pending,
-                                                  include_wip_pacts_since=include_wip_pacts_since,
-                                                  **kwargs)
+                                                     include_wip_pacts_since=include_wip_pacts_since,
+                                                     **kwargs)
 
         assert (return_code == 0), f'Expected returned_code = 0, actual = {return_code}'
 

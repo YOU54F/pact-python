@@ -16,5 +16,8 @@ trap teardown EXIT
 # Wait a little in case Flask isn't quite ready
 sleep 1
 
-# Now run the tests
-pytest tests --run-broker True --publish-pact 1
+if [ "$RUN_BROKER" = '0' ]; then
+    pytest tests --publish-pact 1
+else
+    pytest tests --run-broker True --publish-pact 1
+fi

@@ -20,8 +20,11 @@ def test_get_projects_as_json(provider: PactV3):
      .new_http_interaction('same_as_upon_receiving')
      .given('i have a list of projects')
         .upon_receiving('a request for projects')
-        .with_request(method="GET", path="/projects", query=None, headers=[{"name": 'Accept', "value": "application/json"}])
-        # .with_request(method="GET", path="/projects", query={'from': "today"}, headers=[{"name": 'Accept', "value": "application/json"}])
+        # .with_request(method="GET", path="/projects", query=None, headers=[{"name": 'Accept', "value": "application/json"}])
+        .with_request(method="GET",
+                      path="/projects",
+                      query=[["from", "today"]],
+                      headers=[{"name": 'Accept', "value": "application/json"}])
         .will_respond_with(
          headers=[{"name": 'Content-Type', "value": "application/json"}],
          body=EachLike({
