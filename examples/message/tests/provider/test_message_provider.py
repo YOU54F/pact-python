@@ -51,7 +51,6 @@ def test_verify_success():
     with provider:
         provider.verify()
 
-
 def test_verify_failure_when_a_provider_missing():
     provider = MessageProvider(
         message_providers={
@@ -66,7 +65,6 @@ def test_verify_failure_when_a_provider_missing():
     with pytest.raises(AssertionError):
         with provider:
             provider.verify()
-
 
 def test_verify_from_pact_url(default_opts):
     provider = MessageProvider(
@@ -97,11 +95,12 @@ def test_verify_from_broker(default_opts):
 
     with provider:
         provider.verify_with_broker(broker_url=PACT_BROKER_URL,
-                                    **default_opts,
-                                    enable_pending=True,
-                                    include_wip_pacts_since='2018-01-01',
-                                    consumer_version_selectors=[
-                                        OrderedDict([("mainBranch", True)]),
-                                        OrderedDict([("deployedOrReleased", True)]),
-                                    ],
-                                    )
+                                                     **default_opts,
+                                                     enable_pending=True,
+                                                     include_wip_pacts_since='2018-01-01',
+                                                     consumer_version_selectors=[
+                                                         OrderedDict([("mainBranch", True)]),
+                                                         OrderedDict([("deployedOrReleased", True)]
+                                                                     ),
+                                                     ],
+                                                     )

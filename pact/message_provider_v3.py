@@ -8,7 +8,7 @@ from requests.packages.urllib3 import Retry
 from multiprocessing import Process
 from pact.ffi.verifier import VerifyResult
 from pact.verifier_v3 import VerifierV3
-from .http_proxy import run_proxy
+from .http_proxy_v3 import run_proxy
 
 import logging
 logging.getLogger("urllib3").setLevel(logging.ERROR)
@@ -109,13 +109,15 @@ class MessageProviderV3(object):
         if isinstance(self._process, Process):
             self._wait_for_server_stop()
 
-    def verify(self, **kwargs):
+    def verify(self, *pacts, **kwargs):
         """Verify pact files with executable verifier."""
-        pact_files = f'{self.pact_dir}/{self._pact_file()}'
+        if len(pacts) == 0:
+            pacts = [f'{self.pact_dir}/{self._pact_file()}']
+
         verifier = VerifierV3(provider=self.provider,
                               provider_base_url=self._proxy_url(),
                               )
-        return_code, logs = verifier.verify_pacts(sources=[pact_files],
+        return_code, logs = verifier.verify_pacts(sources=pacts,
                                                   **kwargs)
         return VerifyResult(return_code, logs)
 

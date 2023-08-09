@@ -1,6 +1,6 @@
 import os
 import pytest
-from pact import MessageProvider
+from pact import MessageProviderV3
 
 use_pactflow = int(os.getenv('USE_HOSTED_PACT_BROKER', '0'))
 if use_pactflow == 1:
@@ -19,7 +19,6 @@ def default_opts():
     return {
         'broker_username': PACT_BROKER_USERNAME,
         'broker_password': PACT_BROKER_PASSWORD,
-        'broker_url': PACT_BROKER_URL,
         'publish_version': '3',
         'publish_verification_results': True
     }
@@ -44,7 +43,7 @@ def document_deleted_handler():
 
 
 def test_verify_success():
-    provider = MessageProvider(
+    provider = MessageProviderV3(
         message_providers={
             'A document created successfully': document_created_handler,
             'A document deleted successfully': document_deleted_handler
@@ -60,7 +59,7 @@ def test_verify_success():
 
 
 def test_verify_failure_when_a_handler_missing():
-    provider = MessageProvider(
+    provider = MessageProviderV3(
         message_providers={
             'A document created successfully': document_created_handler,
         },
@@ -74,9 +73,8 @@ def test_verify_failure_when_a_handler_missing():
         success, logs = provider.verify()
         assert success == 1
 
-
-def test_verify_from_broker(default_opts):
-    provider = MessageProvider(
+def test_verify_from_pact_url(default_opts):
+    provider = MessageProviderV3(
         message_providers={
             'A document created successfully': document_created_handler,
             'A document deleted successfully': document_deleted_handler
@@ -86,5 +84,23 @@ def test_verify_from_broker(default_opts):
     )
 
     with provider:
-        success, logs = provider.verify_with_broker(**default_opts)
+        success, logs = provider.verify(
+            "http://localhost/pacts/provider/ContentProvider/consumer/DetectContentLambda/latest",
+            **default_opts
+        )
+        assert success == 0
+
+def test_verify_from_broker(default_opts):
+    provider = MessageProviderV3(
+        message_providers={
+            'A document created successfully': document_created_handler,
+            'A document deleted successfully': document_deleted_handler
+        },
+        provider='ContentProvider',
+        consumer='DetectContentLambda',
+    )
+
+    with provider:
+        success, logs = provider.verify_with_broker(
+            broker_url=PACT_BROKER_URL, **default_opts)
         assert success == 0
