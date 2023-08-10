@@ -4,7 +4,7 @@ import time
 
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3 import Retry
+from urllib3 import Retry
 from multiprocessing import Process
 from pact.ffi.verifier import VerifyResult
 from pact.verifier_v3 import VerifierV3

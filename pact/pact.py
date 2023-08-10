@@ -8,7 +8,7 @@ from subprocess import Popen
 import psutil
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3 import Retry
+from urllib3 import Retry
 
 from .broker import Broker
 from .constants import MOCK_SERVICE_PATH
