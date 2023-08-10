@@ -2,5 +2,6 @@ include LICENSE
 include *.txt
 include *.md
 include pact/bin/*
+include pact/ffi/*
 prune pact/test
 prune e2e
