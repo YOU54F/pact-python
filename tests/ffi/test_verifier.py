@@ -1,5 +1,6 @@
 
-from pact.ffi.verifier import Verifier, VerifyStatus
+from pact.ffi.verifier import Verifier
+from pact.verifier_v3 import VerifyStatus
 
 def test_version():
     result = Verifier().version()

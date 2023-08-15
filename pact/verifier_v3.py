@@ -4,10 +4,32 @@ import os
 from typing import NamedTuple
 from pact.ffi.native_verifier import NativeVerifier
 from urllib.parse import urlparse
-from pact.ffi.verifier import VerifyResult
 from pact.pact_exception import PactException
 
 from pact.verify_wrapper import is_url
+
+from enum import Enum, unique
+from typing import Dict, NamedTuple, List
+
+@unique
+class VerifyStatus(Enum):
+    """Return codes from a verify request.
+
+    As per: https://docs.rs/pact_ffi/0.0.2/pact_ffi/verifier/fn.pactffi_verify.html
+    """
+
+    SUCCESS = 0  # Operation succeeded
+    VERIFIER_FAILED = 1  # The verification process failed, see output for errors
+    NULL_POINTER = 2  # A null pointer was received
+    PANIC = 3  # The method panicked
+    INVALID_ARGS = 4  # Invalid arguments were provided to the verification process
+
+
+class VerifyResult(NamedTuple):
+    """Wrap up the return code, and log output."""
+
+    return_code: VerifyStatus
+    logs: List[str]
 
 class CustomHeader(NamedTuple):
     """Custom header to send in the Pact Verifier request."""

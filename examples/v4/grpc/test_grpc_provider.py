@@ -3,7 +3,7 @@ from time import sleep
 import pytest
 from pact import VerifierV3
 import subprocess
-from pact.ffi.verifier import VerifyStatus
+from pact.verifier_v3 import VerifyStatus
 
 @pytest.mark.skipif(
     version_info < (3, 7),

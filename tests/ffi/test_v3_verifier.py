@@ -1,7 +1,7 @@
 import pytest
 from pact import VerifierV3
 import platform
-from pact.ffi.verifier import VerifyStatus
+from pact.verifier_v3 import VerifyStatus
 from pact.pact_exception import PactException
 
 
