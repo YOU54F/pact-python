@@ -32,10 +32,9 @@ clean:
 
 define CONSUMER
 	echo "consumer make"
-	cd examples/consumer
-	pip install -q -r requirements.txt
-	pip install -e ../../
-	./run_pytest.sh
+	cd examples
+	pip install -e ../
+	pytest tests
 endef
 export CONSUMER
 
@@ -45,7 +44,7 @@ define FLASK_PROVIDER
 	cd examples/flask_provider
 	pip install -q -r requirements.txt
 	pip install -e ../../
-	./run_pytest.sh
+	pytest tests
 endef
 export FLASK_PROVIDER
 

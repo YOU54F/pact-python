@@ -10,7 +10,11 @@ import pytest
 from pact import Consumer, Format, Like, Provider
 from yarl import URL
 
+<<<<<<< Updated upstream
 from src.consumer import User, UserConsumer
+=======
+from ..src.consumer import User, UserConsumer
+>>>>>>> Stashed changes
 
 if TYPE_CHECKING:
     from pact.pact import Pact
