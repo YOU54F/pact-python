@@ -1,0 +1,14 @@
+ARG PYTHON_VERSION=3.11
+FROM python:$PYTHON_VERSION-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update --yes && apt install --yes gcc make
+
+WORKDIR /home
+COPY . /home
+
+RUN python -m pip install --upgrade pip
+RUN python -m pip install --upgrade hatch
+
+CMD ["sh","-c","python -m hatch run test"]

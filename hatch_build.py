@@ -34,6 +34,7 @@ PACT_BIN_URL = "https://github.com/pact-foundation/pact-ruby-standalone/releases
 
 PACT_LIB_VERSION = os.getenv("PACT_LIB_VERSION", "0.4.9")
 PACT_LIB_URL = "https://github.com/pact-foundation/pact-reference/releases/download/libpact_ffi-v{version}/{prefix}pact_ffi-{os}-{machine}.{ext}"
+PACT_ALT_LIB_URL = "https://github.com/YOU54F/pact-reference/releases/download/libpact_ffi-v{version}/{prefix}pact_ffi-{machine}.{ext}"
 
 
 class PactBuildHook(BuildHookInterface[Any]):
@@ -137,7 +138,7 @@ class PactBuildHook(BuildHookInterface[Any]):
                 ext="zip",
             )
 
-        if "linux" in platform and "musl" not in platform:
+        if "linux" in platform:
             os = "linux"
             if platform.endswith("x86_64"):
                 machine = "x86_64"
@@ -170,18 +171,17 @@ class PactBuildHook(BuildHookInterface[Any]):
             artifact: The path to the downloaded artifact.
         """
         (ROOT_DIR / "pact" / "bin").mkdir(parents=True, exist_ok=True)
+        (ROOT_DIR / "pact" / "lib").mkdir(parents=True, exist_ok=True)
 
         if str(artifact).endswith(".zip"):
             with zipfile.ZipFile(artifact) as f:
                 for member in f.namelist():
-                    if member.startswith("pact/bin"):
-                        f.extract(member, ROOT_DIR)
+                    f.extract(member, ROOT_DIR)
 
         if str(artifact).endswith(".tar.gz"):
             with tarfile.open(artifact) as f:
                 for member in f.getmembers():
-                    if member.name.startswith("pact/bin"):
-                        f.extract(member, ROOT_DIR)
+                    f.extract(member, ROOT_DIR)
 
     def pact_lib_install(self, version: str) -> None:
         """
@@ -257,6 +257,15 @@ class PactBuildHook(BuildHookInterface[Any]):
             os = "linux"
             if platform.endswith("x86_64"):
                 machine = "x86_64-musl"
+            elif platform.endswith("aarch64"):
+                machine = "aarch64-unknown-linux-musl"
+                return PACT_ALT_LIB_URL.format(
+                    prefix="lib",
+                    version=version,
+                    os=os,
+                    machine=machine,
+                    ext="a.gz",
+                )
             else:
                 msg = f"Unknown MUSL Linux machine {platform}"
                 raise ValueError(msg)

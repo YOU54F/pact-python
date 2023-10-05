@@ -1,49 +1,80 @@
-TEST_TEMPLATE: &TEST_TEMPLATE
-  arch_check_script:
-    - uname -am
-  test_script:
-    - python --version
-      # TODO: Fix lints before enabling
-    - echo hatch run lint
-      # TODO: Implement the examples to work in hatch
-    - echo hatch run example
-    - hatch run test
+# TEST_TEMPLATE: &TEST_TEMPLATE
+#   arch_check_script:
+#     - uname -am
+#   test_script:
+#     - python --version
+#       # TODO: Fix lints before enabling
+#     - echo hatch run lint
+#       # TODO: Implement the examples to work in hatch
+#     - echo hatch run example
+#     - hatch run test
 
-linux_arm64_task:
-  env:
-    PATH: ${HOME}/.local/bin:${PATH}
-    matrix:
-      - IMAGE: "python:3.8-slim"
-      - IMAGE: "python:3.9-slim"
-      - IMAGE: "python:3.10-slim"
-      - IMAGE: "python:3.11-slim"
+# linux_arm64_task:
+#   env:
+#     PATH: ${HOME}/.local/bin:${PATH}
+#     matrix:
+#       - IMAGE: "python:3.8-slim"
+#       - IMAGE: "python:3.9-slim"
+#       - IMAGE: "python:3.10-slim"
+#       - IMAGE: "python:3.11-slim"
+#   arm_container:
+#     image: $IMAGE
+#   install_script:
+#     - apt update --yes
+#     - apt install --yes gcc make
+#     - python -m pip install --upgrade pip pipx
+#     - pipx install hatch
+#   <<: *TEST_TEMPLATE
+
+TEST_TEMPLATE: &TEST_TEMPLATE
+  arch_check_script: |
+    uname -am
+  pytest_unit_script: |
+    hatch run test
+  pytest_ffi_script: |
+    hatch run test tests/test_ffi.py -rP
+  pact_cli_script: |
+    pact/bin/pact-broker version
+
+docker_alpine_arm64_task:
   arm_container:
-    image: $IMAGE
-  install_script:
-    - apt update --yes
-    - apt install --yes gcc make
-    - python -m pip install --upgrade pip pipx
-    - pipx install hatch
+    dockerfile: docker/Dockerfile
+    docker_arguments:
+      PY: 3.11
+  env:
+    - PACT_LIB_VERSION: 0.4.5 # Using a personal fork for linux aarch64 musl binary
+  <<: *TEST_TEMPLATE
+docker_alpine_amd64_task:
+  amd_container:
+    dockerfile: docker/Dockerfile
+    docker_arguments:
+      PY: 3.11
+  <<: *TEST_TEMPLATE
+docker_debian_arm64_task:
+  arm_container:
+    dockerfile: docker/Dockerfile.debian
+    docker_arguments:
+      PY: 3.11
+  <<: *TEST_TEMPLATE
+docker_debian_amd64_task:
+  amd_container:
+    dockerfile: docker/Dockerfile.debian
+    docker_arguments:
+      PY: 3.11
   <<: *TEST_TEMPLATE
 
-macosx_arm64_task:
+macos_arm64_task:
   macos_instance:
     image: ghcr.io/cirruslabs/macos-ventura-base:latest
   env:
-    PATH: ${HOME}/.local/bin:${HOME}/.pyenv/shims:${PATH}
+    PATH: /opt/homebrew/opt/python@${PYTHON}/libexec/bin:${HOME}/.local/bin:${PATH}
     matrix:
-      - PYTHON: "3.8"
-      - PYTHON: "3.9"
       - PYTHON: "3.10"
-      - PYTHON: "3.11"
-  install_script:
-    - brew update
-    - brew install pyenv
-    - pyenv install ${PYTHON}
-    - pyenv global ${PYTHON}
-    - pyenv rehash
-    - python -m pip install --upgrade pip pipx
-    - pyenv rehash
-    - pipx install hatch
-    - pyenv rehash
+      # - PYTHON: "3.11"
+  install_script: |
+    brew install python@$PYTHON
+    brew link python@$PYTHON
+    python$PYTHON --version
+    pip$PYTHON install pipx
+    pipx install hatch
   <<: *TEST_TEMPLATE

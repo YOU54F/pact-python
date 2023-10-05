@@ -1,21 +1,16 @@
 ARG PY
-ARG ALPINE=3.17
-FROM python:${PY}-alpine${ALPINE}
+ARG OS_VERSION=3.17
+FROM python:${PY}-alpine${OS_VERSION}
 
 ENV PIP_ROOT_USER_ACTION=ignore
 
 WORKDIR /home
-
-COPY requirements_dev.txt .
-
+ # following deps [gcompat libc6-compat bash] required only for pact-ruby-standalone.
 RUN apk update \
     && apk upgrade \
-    && apk add --no-cache --update gcc build-base linux-headers musl-locales \
+    && apk add --no-cache --update gcc build-base linux-headers musl-locales libffi-dev gcompat libc6-compat bash \
     && pip install --progress-bar=off --upgrade pip \
     && pip install --progress-bar=off --upgrade psutil \
-    && pip install --progress-bar=off --use-pep517 -r requirements_dev.txt
+    && pip install --progress-bar=off --upgrade hatch
 
-# We can't do ENV manipulation to remove the . for tox, so need another var
-ARG TOXPY
-ENV TOXPY="${TOXPY}"
-CMD ["sh", "-c", "tox -e py${TOXPY}-{test,install}"]
+CMD ["sh", "-c", "python -m hatch run test"]

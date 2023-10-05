@@ -97,7 +97,7 @@ extra-dependencies = ["hatchling", "packaging", "requests", "cffi"]
 
 [tool.hatch.envs.default.scripts]
 lint = ["black --check --diff {args:.}", "ruff {args:.}", "mypy {args:.}"]
-test = "pytest --cov-config=pyproject.toml --cov=pact --cov=tests tests/"
+test = "pytest {args:--cov-config=pyproject.toml --cov=pact --cov=tests tests}"
 # TODO: Adapt the examples to work in Hatch
 all = ["lint", "tests"]
 
@@ -110,7 +110,7 @@ features = ["test"]
 python = ["3.8", "3.9", "3.10", "3.11"]
 
 [tool.hatch.envs.test.scripts]
-test = "pytest --cov-config=pyproject.toml --cov=pact --cov=tests tests/"
+test = "pytest --cov-config=pyproject.toml --cov=pact --cov=tests tests/ -rP"
 # TODO: Adapt the examples to work in Hatch
 all = ["tests"]
 
