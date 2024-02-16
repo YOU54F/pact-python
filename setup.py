@@ -127,7 +127,7 @@ def install_ruby_app(package_bin_path: str, download_bin_path=None):
             download_ruby_app_binary(package_bin_path, binary['filename'], binary['suffix'])
             extract_ruby_app_binary(package_bin_path, package_bin_path, binary['filename'])
 
-def ruby_app_binary():
+def ruby_app_binary(): # noqa: max-complexity: 15
     """
     Determine the ruby app binary required for this OS.
 
@@ -146,7 +146,7 @@ def ruby_app_binary():
                 suffix = 'linux-musl-arm64.tar.gz'
             else:
                 suffix = 'linux-arm64.tar.gz'
-        except Exception as e:
+        except Exception:
             suffix = 'linux-arm64.tar.gz'
     elif 'linux' in target_platform:
         try:
@@ -154,7 +154,7 @@ def ruby_app_binary():
                 suffix = 'linux-musl-x86_64.tar.gz'
             else:
                 suffix = 'linux-x86_64.tar.gz'
-        except Exception as e:
+        except Exception:
             suffix = 'linux-x86_64.tar.gz'
     elif 'windows' in target_platform and IS_64:
         suffix = 'windows-x86_64.zip'
