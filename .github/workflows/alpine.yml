@@ -19,14 +19,26 @@ jobs:
           - '3.9'
           - '3.10'
           - '3.11'
-        os: [ ubuntu-latest ]
+        alpine-version:
+          - '3.15'
+          - '3.16'
+          - '3.17'
+          - '3.18'
+          - '3.19'
+        os: [ubuntu-latest']
+        arch: [ amd64, arm64 ]
 
 
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        if: matrix.arch == 'arm64'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        if: matrix.arch == 'arm64'
       - name: run alpine in docker
         run: |
-          (export PY=${{ matrix.python-version }} && docker build --build-arg PY="$PY" --build-arg TOXPY="$(sed 's/\.//' <<< "$PY")" -t pactfoundation:python${PY} -f docker/Dockerfile .)
-          docker run --rm -v "$(pwd)":/home pactfoundation:python${{ matrix.python-version }} sh -c "apk add bash && cd /home && tox -e py${PY} && make consumer"
+          (export PY=${{ matrix.python-version }} && docker build --platform=${{ matrix.arch }} --build-arg PY="$PY" --build-arg TOXPY="$(sed 's/\.//' <<< "$PY")" --build-arg ALPINE=${{ matrix.alpine-version }} -t pactfoundation:python${PY} -f docker/Dockerfile .)
+          docker run --platform=${{ matrix.arch }} --rm -v "$(pwd)":/home pactfoundation:python${{ matrix.python-version }} sh -c "apk add bash && cd /home && tox -e py${PY} && make consumer"
