@@ -14,7 +14,6 @@ jobs:
 
       matrix:
         python-version:
-          - '3.6'
           - '3.7'
           - '3.8'
           - '3.9'
@@ -30,4 +29,4 @@ jobs:
       - name: run alpine in docker
         run: |
           (export PY=${{ matrix.python-version }} && docker build --build-arg PY="$PY" --build-arg TOXPY="$(sed 's/\.//' <<< "$PY")" -t pactfoundation:python${PY} -f docker/Dockerfile .)
-          docker run -it --rm -v "$(pwd)":/home pactfoundation:python${{ matrix.python-version }} sh -c "apk add bash && cd /home && tox -e py${PY} && make consumer"
+          docker run --rm -v "$(pwd)":/home pactfoundation:python${{ matrix.python-version }} sh -c "apk add bash && cd /home && tox -e py${PY} && make consumer"
