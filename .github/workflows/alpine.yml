@@ -25,7 +25,7 @@ jobs:
           - '3.17'
           - '3.18'
           - '3.19'
-        os: [ubuntu-latest']
+        os: [ubuntu-latest]
         arch: [ amd64, arm64 ]
 
 
