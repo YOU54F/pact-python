@@ -3,6 +3,7 @@
 import os
 import platform
 import shutil
+import subprocess
 import sys
 import tarfile
 
@@ -15,11 +16,13 @@ from distutils.command.sdist import sdist as sdist_orig
 
 
 IS_64 = sys.maxsize > 2 ** 32
-PACT_STANDALONE_VERSION = '2.0.2'
+PACT_STANDALONE_VERSION = '3.0.0'
 PACT_STANDALONE_SUFFIXES = ['osx-x86_64.tar.gz',
                             'osx-arm64.tar.gz',
                             'linux-x86_64.tar.gz',
                             'linux-arm64.tar.gz',
+                            'linux-musl-x86_64.tar.gz',
+                            'linux-musl-arm64.tar.gz',
                             'windows-x86_64.zip',
                             'windows-x86.zip',
                             ]
@@ -124,7 +127,6 @@ def install_ruby_app(package_bin_path: str, download_bin_path=None):
             download_ruby_app_binary(package_bin_path, binary['filename'], binary['suffix'])
             extract_ruby_app_binary(package_bin_path, package_bin_path, binary['filename'])
 
-
 def ruby_app_binary():
     """
     Determine the ruby app binary required for this OS.
@@ -139,9 +141,21 @@ def ruby_app_binary():
     elif ("darwin" in target_platform or "macos" in target_platform) and IS_64:
         suffix = 'osx-x86_64.tar.gz'
     elif 'linux' in target_platform and IS_64 and "aarch64" in platform.machine():
-        suffix = 'linux-arm64.tar.gz'
+        try:
+            if 'musl' in subprocess.check_output(['ldd', '/bin/sh']).decode().lower():
+                suffix = 'linux-musl-arm64.tar.gz'
+            else:
+                suffix = 'linux-arm64.tar.gz'
+        except Exception as e:
+            suffix = 'linux-arm64.tar.gz'
     elif 'linux' in target_platform:
-        suffix = 'linux-x86_64.tar.gz'
+        try:
+            if 'musl' in subprocess.check_output(['ldd', '/bin/sh']).decode().lower():
+                suffix = 'linux-musl-x86_64.tar.gz'
+            else:
+                suffix = 'linux-x86_64.tar.gz'
+        except Exception as e:
+            suffix = 'linux-x86_64.tar.gz'
     elif 'windows' in target_platform and IS_64:
         suffix = 'windows-x86_64.zip'
     elif 'windows' in target_platform:
@@ -163,7 +177,7 @@ def download_ruby_app_binary(path_to_download_to, filename, suffix):
     :param filename: The filename that should be installed.
     :param suffix: The suffix of the standalone app to install.
     """
-    uri = ('https://github.com/pact-foundation/pact-ruby-standalone/releases'
+    uri = ('https://github.com/you54f/pact-ruby-standalone/releases'
            '/download/v{version}/pact-{version}-{suffix}')
 
     if sys.version_info.major == 2:

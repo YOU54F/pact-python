@@ -41,7 +41,7 @@ def pact(request):
     # When publishing a Pact to the Pact Broker, a version number of the Consumer
     # is required, to be able to construct the compatability matrix between the
     # Consumer versions and Provider versions
-    version = request.config.getoption("--publish-pact")
+    version = False
     publish = True if version else False
 
     pact = Consumer("UserServiceClient", version=version).has_pact_with(

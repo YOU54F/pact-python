@@ -4,5 +4,5 @@ import sys
 sys.path.append("../common")
 
 pytest_plugins = [
-    "sharedfixtures",
+    # "sharedfixtures",
 ]
