@@ -41,9 +41,9 @@ class RegisterFfi(object):
         # print(platform.machine())
 
         if ("darwin" in target_platform or "macos" in target_platform) and ("aarch64" in platform.machine() or "arm64" in platform.machine()):
-            libname = os.path.join(FFI_LIB_PATH, "libpact_ffi-osx-aarch64-apple-darwin.dylib")
+            libname = os.path.join(FFI_LIB_PATH, "libpact_ffi-macos-aarch64.dylib")
         elif "darwin" in target_platform or "macos" in target_platform:
-            libname = os.path.join(FFI_LIB_PATH, "libpact_ffi-osx-x86_64.dylib")
+            libname = os.path.join(FFI_LIB_PATH, "libpact_ffi-macos-x86_64.dylib")
         elif "linux" in target_platform and self.IS_64 and ("aarch64" in platform.machine() or "arm64" in platform.machine()):
             libname = os.path.join(FFI_LIB_PATH, "libpact_ffi-linux-aarch64.so")
         elif "linux" in target_platform and self.IS_64:

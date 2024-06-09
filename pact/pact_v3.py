@@ -54,7 +54,7 @@ class PactV3(object):
                 print(header['name'])
                 print(header['value'])
                 # TODO:- deal with multi-value headers and increment the header value appropriately
-                self.pact.with_response_header(self.interactions[0], header['name'], 0, header['value'])
+                self.pact.with_request_header(self.interactions[0], header['name'], 0, header['value'])
                 # index += 1
                 if header['name'] in ['Content-Type', 'content-type']:
                     content_type = header['value']

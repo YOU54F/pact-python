@@ -23,12 +23,12 @@ PACT_STANDALONE_SUFFIXES = [
     'windows-x86_64.zip',
     'windows-x86.zip',
 ]
-PACT_FFI_VERSION = "0.4.7"
+PACT_FFI_VERSION = "0.4.27"
 PACT_FFI_FILENAMES = [
     "libpact_ffi-linux-aarch64.so.gz",
     "libpact_ffi-linux-x86_64.so.gz",
-    "libpact_ffi-osx-aarch64-apple-darwin.dylib.gz",
-    "libpact_ffi-osx-x86_64.dylib.gz",
+    "libpact_ffi-macos-aarch64.dylib.gz",
+    "libpact_ffi-macos-x86_64.dylib.gz",
     "pact_ffi-windows-x86_64.dll.gz",
 ]
 PACT_RUBY_FILENAME = "pact-{version}-{suffix}"
@@ -141,7 +141,7 @@ def get_ruby_uri(suffix) -> str:
 def get_rust_uri(filename) -> str:
     """Determine the full URI to download the Rust binary from."""
     uri = (
-        "https://github.com/pact-foundation/pact-reference/releases"
+        "https://github.com/you54f/pact-reference/releases"
         "/download/libpact_ffi-v{version}/{filename}"
     )
     return uri.format(version=PACT_FFI_VERSION, filename=filename)
@@ -234,9 +234,9 @@ def rust_lib_binary() -> Binary:
     # print(platform.machine())
 
     if ("darwin" in target_platform or "macos" in target_platform) and ("aarch64" in platform.machine() or "arm64" in platform.machine()):
-        binary = "libpact_ffi-osx-aarch64-apple-darwin.dylib.gz"
+        binary = "libpact_ffi-macos-aarch64.dylib.gz"
     elif "darwin" in target_platform or "macos" in target_platform:
-        binary = "libpact_ffi-osx-x86_64.dylib.gz"
+        binary = "libpact_ffi-macos-x86_64.dylib.gz"
     elif "linux" in target_platform and IS_64 and ("aarch64" in platform.machine() or "arm64" in platform.machine()):
         binary = "libpact_ffi-linux-aarch64.so.gz"
     elif "linux" in target_platform and IS_64:

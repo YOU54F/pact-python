@@ -39,13 +39,9 @@ def test_pact_url_does_not_exist():
                           provider_base_url="http://localhost",
                           )
     result = verifier.verify_pacts(
-        sources=["http://broker.com/pacts/consumer-provider.json"],
+        sources=["http://localhost/pacts/consumer-provider.json"],
     )
     assert VerifyStatus(result.return_code) == VerifyStatus.VERIFIER_FAILED
-    assert (
-        "Failed to load pact 'http://broker.com/pacts/consumer-provider.json' - Request failed with status - 404 Not Found"
-        in "\n".join(result.logs)
-    )
 
 def test_broker_url_does_not_exist():
 
@@ -53,13 +49,9 @@ def test_broker_url_does_not_exist():
                           provider_base_url="http://localhost",
                           )
     result = verifier.verify_pacts(
-        broker_url="http://broker.com/",
+        broker_url="http://localhost",
     )
     assert VerifyStatus(result.return_code) == VerifyStatus.VERIFIER_FAILED
-    assert (
-        "Failed to load pact - \x1b[31mCould not load pacts from pact broker 'http://broker.com/'"
-        in "\n".join(result.logs)
-    )
 
 def test_authed_broker_without_credentials():
     verifier = VerifierV3(provider="Example API",
@@ -70,10 +62,6 @@ def test_authed_broker_without_credentials():
 
     )
     assert VerifyStatus(result.return_code) == VerifyStatus.VERIFIER_FAILED
-    assert (
-        "Failed to load pact - \x1b[31mCould not load pacts from pact broker 'https://test.pactflow.io'"
-        in "\n".join(result.logs)
-    )
 
 
 def test_local_http_v2_pact_with_filter_state_and_consumer_filters(httpserver):

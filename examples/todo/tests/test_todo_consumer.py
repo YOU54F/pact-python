@@ -9,7 +9,7 @@ import platform
 target_platform = platform.platform().lower()
 is_not_win = any(substring in target_platform for substring in ['linux', 'macos'])
 is_gha = os.getenv("ACT") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
-mime_type = 'image/jpeg' if is_not_win and is_gha else 'application/octet-stream'
+mime_type = 'image/jpeg'
 @pytest.fixture
 def provider():
     return PactV3('TodoApp', 'TodoServiceV3')
@@ -49,7 +49,7 @@ def test_get_projects_as_json(provider: PactV3):
         provider.verify()
 
 @pytest.mark.skipif(
-    True,
+    False,
     reason="https://github.com/pact-foundation/pact-reference/issues/305")
 # TODO:- This test in unreliable, sometimes xml is not returned from the mock provider
 def test_with_xml_requests(provider: PactV3):
@@ -62,16 +62,7 @@ def test_with_xml_requests(provider: PactV3):
         # .with_request(method="GET", path="/projects", query={'from': "today"}, headers=[{"name":'Accept',"value": "application/xml"}])
         .will_respond_with(
          headers=[
-             # TODO:- if content-type not set, xml body not returned
-             # TODO:- Test is unreliable, ran locally
-             # TODO:- Probably easier just to ask for a content_type argument?
-             # TODO:- Getting written to pact file as
-             # TODO:-  "headers": {
-             # TODO:-   "Content-Type": "application/xml",
-             # TODO:-   "content-type": ", application/xml"
-             # TODO:- },
              {"name": "Content-Type", "value": "application/xml"},
-             {"name": "content-type", "value": "application/xml"}
          ],
          body='''<?xml version="1.0" encoding="UTF-8"?>
                     <projects>

@@ -5,8 +5,7 @@ import platform
 target_platform = platform.platform().lower()
 is_not_win = any(substring in target_platform for substring in ['linux', 'macos'])
 is_gha = os.getenv("ACT") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
-mime_type = 'image/jpeg' if is_not_win and is_gha else 'application/octet-stream'
-
+mime_type = 'image/jpeg'
 class TodoConsumer(object):
     def __init__(self, base_uri):
         self.base_uri = base_uri
