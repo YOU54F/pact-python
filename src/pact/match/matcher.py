@@ -108,6 +108,29 @@ class AbstractMatcher(ABC, Generic[_T_co]):
             return AndMatcher(self, other)
         return NotImplemented
 
+    def __or__(self, other: object) -> OrMatcher[Any]:
+        """
+        Combine two matchers using a logical OR.
+
+        This allows for combining multiple matchers into a single matcher that
+        requires at least one of the conditions to be met. Chaining the
+        operator (`a | b | c`) produces a single, flat list of alternatives.
+
+        Only a single example value is supported when combining matchers. The
+        first value found will be used. See [`OrMatcher`][pact.match.matcher.OrMatcher]
+        for caveats.
+
+        Args:
+            other:
+                The other matcher to combine with.
+
+        Returns:
+            An `OrMatcher` that combines both matchers.
+        """
+        if isinstance(other, AbstractMatcher):
+            return OrMatcher(self, other)
+        return NotImplemented
+
 
 class GenericMatcher(AbstractMatcher[_T_co]):
     """
@@ -372,6 +395,12 @@ class AndMatcher(AbstractMatcher[_T_co]):
                 Example value to match against. If not provided, the value
                 from the first matcher that has a value will be used.
         """
+        if any(isinstance(m, OrMatcher) for m in matchers):
+            msg = (
+                "An OrMatcher cannot be combined with other matchers using AND,"
+                " as Pact only supports a single combination per path."
+            )
+            raise TypeError(msg)
         self._matchers = matchers
         self._value: _T_co | Unset = value
 
@@ -406,6 +435,135 @@ class AndMatcher(AbstractMatcher[_T_co]):
         }
 
 
+class OrMatcher(AbstractMatcher[_T_co]):
+    """
+    Or matcher.
+
+    A matcher that combines multiple matchers using a logical OR: the value
+    must satisfy at least one of the constituent matchers.
+
+    Nested `OrMatcher` instances are flattened into a single list of
+    alternatives, as each path in a Pact file holds a single list of rules
+    combined with either AND or OR. For the same reason, an
+    [`AndMatcher`][pact.match.matcher.AndMatcher] cannot be used as one of the
+    alternatives.
+
+    /// warning
+    Only the example value is used during the consumer test. The other
+    alternatives are written to the Pact file and checked during provider
+    verification, but they are never exercised against the consumer code.
+    ///
+
+    /// note
+    This requires a version of the Pact FFI with support for the
+    `pact:matcher:combine` integration JSON attribute
+    ([pact-reference#601](https://github.com/pact-foundation/pact-reference/pull/601)).
+    TODO: Replace with the first released `pact_ffi` version that includes it.
+    ///
+    """
+
+    def __init__(
+        self,
+        *matchers: AbstractMatcher[Any],
+        value: _T_co | Unset = UNSET,
+    ) -> None:
+        """
+        Initialize the matcher.
+
+        It is best practice to provide a value. This may be set when creating
+        the `OrMatcher`, or it may be inferred from one of the constituent
+        matchers. In the latter case, the value from the first matcher that has
+        a value will be used.
+
+        Any matching rules nested within the example value (for example, when
+        the value is a dictionary containing matchers) still apply to the
+        children of the value.
+
+        Args:
+            matchers:
+                List of matchers to combine. At least two are required.
+
+            value:
+                Example value to match against. If not provided, the value
+                from the first matcher that has a value will be used.
+
+        Raises:
+            TypeError:
+                If an alternative is not a matcher or is an `AndMatcher`, or if
+                the value is itself a matcher.
+
+            ValueError:
+                If fewer than two alternatives are provided.
+        """
+        alternatives: list[AbstractMatcher[Any]] = []
+        for matcher in matchers:
+            if isinstance(matcher, OrMatcher):
+                alternatives.extend(matcher._matchers)  # noqa: SLF001
+            elif isinstance(matcher, AndMatcher):
+                msg = (
+                    "An AndMatcher cannot be used as an alternative in an"
+                    " OrMatcher, as Pact only supports a single combination"
+                    " per path."
+                )
+                raise TypeError(msg)
+            elif isinstance(matcher, AbstractMatcher):
+                alternatives.append(matcher)
+            else:
+                msg = f"Expected a matcher, got {matcher!r}."
+                raise TypeError(msg)
+
+        if len(alternatives) < 2:  # noqa: PLR2004
+            msg = "An OrMatcher requires at least two alternatives."
+            raise ValueError(msg)
+
+        if isinstance(value, AbstractMatcher):
+            msg = (
+                "The value of an OrMatcher cannot be a matcher. Pass it as one"
+                " of the alternatives instead."
+            )
+            raise TypeError(msg)
+
+        self._matchers: tuple[AbstractMatcher[Any], ...] = tuple(alternatives)
+        self.value: _T_co | Unset = value
+        """
+        Default value used by Pact when executing tests.
+        """
+
+        if isinstance(self.value, Unset):
+            for matcher in matchers:
+                if matcher.has_value():
+                    # If `has_value` is true, `value` must be present
+                    self.value = matcher.value  # type: ignore[attr-defined]
+                    break
+
+    def to_integration_json(self) -> dict[str, Any]:
+        """
+        Convert the matcher to an integration JSON object.
+
+        See
+        [`AbstractMatcher.to_integration_json`][AbstractMatcher.to_integration_json]
+        for more information.
+        """
+        return {
+            "pact:matcher:type": [m.to_integration_json() for m in self._matchers],
+            "pact:matcher:combine": "OR",
+            **({"value": self.value} if not isinstance(self.value, Unset) else {}),
+        }
+
+    def to_matching_rule(self) -> dict[str, Any]:
+        """
+        Convert the matcher to a matching rule.
+
+        See
+        [`AbstractMatcher.to_matching_rule`][AbstractMatcher.to_matching_rule]
+        for more information.
+        """
+        return {
+            "combine": "OR",
+            "matchers": [m.to_matching_rule() for m in self._matchers],
+        }
+
+
 class MatchingRuleJSONEncoder(JSONEncoder):
     """
     JSON encoder class for matching rules.
@@ -424,7 +582,7 @@ class MatchingRuleJSONEncoder(JSONEncoder):
         Returns:
             The encoded object.
         """
-        if isinstance(o, AndMatcher):
+        if isinstance(o, (AndMatcher, OrMatcher)):
             return o.to_matching_rule()
         if isinstance(o, AbstractMatcher):
             # We need to convert all matchers in AndMatchers (even if there is
