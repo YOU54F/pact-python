@@ -202,15 +202,17 @@ def test_repeated_request_header_matcher_per_value(
     assert rfc_9110_warnings(caplog) == []
 
 
-def test_repeated_request_header_per_line_fallback_warns(
+def test_repeated_request_header_quoted_whitespace_is_literal(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """
-    H6b: a match only found by comparing field lines one at a time is logged.
+    H6b: whitespace inside a quoted string is significant.
 
-    The expected `"x , y"` differs from the sent `"x, y"` only in whitespace
-    inside a quoted string, so the values only match when the field lines are
-    compared one at a time rather than joined.
+    Per [RFC 9110
+    §5.6.4](https://www.rfc-editor.org/rfc/rfc9110.html#section-5.6.4), the
+    content of a quoted string is literal. The expected `"x , y"` therefore
+    does not match the sent `"x, y"`, whether the field lines are joined or
+    compared one at a time, and no RFC 9110 or deprecation warning is logged.
     """
     pact = Pact("consumer", "provider")
     (
@@ -226,8 +228,13 @@ def test_repeated_request_header_per_line_fallback_warns(
         status = send_raw_request(srv, "X-Request", ['"x, y"', "z"])
         mismatches = srv.mismatches
 
-    assert status == 200
-    assert mismatches == []
-    warnings = rfc_9110_warnings(caplog)
-    assert len(warnings) == 1
-    assert "compared one at a time" in warnings[0]
+    assert status != 200
+    assert mismatches
+    assert rfc_9110_warnings(caplog) == []
+    assert not [
+        record.getMessage()
+        for record in caplog.records
+        if record.name.startswith("pact.ffi")
+        and record.levelno == logging.WARNING
+        and "deprecat" in record.getMessage().lower()
+    ]
