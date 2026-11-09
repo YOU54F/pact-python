@@ -237,6 +237,52 @@ user_scores = match.each_value_matches(
 )
 ```
 
+## Alternative Matchers
+
+When a value may take one of several forms, use `match.any_of()` (or the `|`
+operator) to combine matchers with a logical OR. The value must satisfy at least
+one of the alternatives:
+
+```python
+response = {
+    # Either a numeric string or a UUID
+    "id": match.any_of(
+        match.regex("12345", regex=r"^\d+$"),
+        match.uuid(),
+    ),
+    # Equivalent, using the `|` operator
+    "ref": match.regex("12345", regex=r"^\d+$") | match.uuid(),
+}
+```
+
+A common case is a value that may be `null`. The `match.nullable()` helper
+combines a matcher (or an example value) with `match.null()`. Matchers nested
+within an object still apply to its children whenever the object is not `null`:
+
+```python
+response = {
+    "nickname": match.nullable(match.str("Al")),
+    "address": match.nullable({
+        "street": match.str("Main St"),
+        "number": match.int(42),
+    }),
+}
+```
+
+/// warning
+Only the example value (the first value provided) is used during the consumer
+test. The other alternatives are written to the Pact file and checked during
+provider verification, but are never exercised against the consumer code. In the
+example above, the consumer only ever sees an address object, never `null`.
+///
+
+/// note
+OR matchers require a version of the Pact FFI with support for the
+`pact:matcher:combine` integration JSON attribute
+([pact-reference#601](https://github.com/pact-foundation/pact-reference/pull/601)).
+TODO: Replace with the first released `pact_ffi` version that includes it.
+///
+
 """
 
 from __future__ import annotations
@@ -255,6 +301,7 @@ from pact.match.matcher import (
     EachKeyMatcher,
     EachValueMatcher,
     GenericMatcher,
+    OrMatcher,
 )
 from pact.types import UNSET, Matchable, Unset
 
@@ -280,6 +327,7 @@ if TYPE_CHECKING:
 # <https://github.com/pact-foundation/pact-reference/blob/303073c/rust/pact_models/src/matchingrules/mod.rs#L62>
 __all__ = [
     "AbstractMatcher",
+    "any_of",
     "array_containing",
     "bool",
     "boolean",
@@ -296,6 +344,7 @@ __all__ = [
     "like",
     "none",
     "null",
+    "nullable",
     "number",
     "regex",
     "str",
@@ -1122,3 +1171,77 @@ def each_value_matches(
     if isinstance(rules, AbstractMatcher):
         rules = [rules]
     return EachValueMatcher(value=value, rules=rules)
+
+
+def any_of(
+    *matchers: AbstractMatcher[Any],
+    value: Any = UNSET,  # noqa: ANN401
+) -> AbstractMatcher[Any]:
+    r"""
+    Match a value against any one of several matchers.
+
+    The matchers are combined with a logical OR, so the value must satisfy at
+    least one of them. This is equivalent to combining the matchers with the
+    `|` operator:
+
+    ```python
+    match.any_of(match.int(1), match.regex("one", regex=r"^\w+$"))
+    match.int(1) | match.regex("one", regex=r"^\w+$")
+    ```
+
+    Nested OR matchers are flattened into a single list of alternatives. An
+    AND matcher (created with `&`) cannot be used as an alternative.
+
+    /// warning
+    Only the example value is used during the consumer test; the other
+    alternatives are only checked during provider verification.
+    ///
+
+    Args:
+        matchers:
+            Matchers to combine. At least two are required.
+
+        value:
+            Example value. If not provided, the value of the first matcher
+            which has a value is used. The value must not itself be a matcher.
+
+    Returns:
+        Matcher for values that match at least one of the given matchers.
+    """
+    return OrMatcher(*matchers, value=value)
+
+
+@overload
+def nullable(value: AbstractMatcher[_T], /) -> AbstractMatcher[_T | None]: ...
+@overload
+def nullable(value: _T, /) -> AbstractMatcher[_T | None]: ...
+def nullable(value: Any, /) -> AbstractMatcher[Any]:
+    """
+    Match a value that is either `null` or matches the given value.
+
+    If a matcher is given, the value must match it or be `null`. If a plain
+    value is given, the value must match its type or be `null`; matchers
+    nested within a plain value (for example, a dictionary) still apply to its
+    children:
+
+    ```python
+    match.nullable(match.str("Al"))
+    match.nullable({"street": match.str("Main St"), "number": match.int(42)})
+    ```
+
+    /// warning
+    Only the example value is used during the consumer test, so the consumer
+    never sees `null`. The `null` alternative is only checked during provider
+    verification.
+    ///
+
+    Args:
+        value:
+            Matcher or example value for the non-null case.
+
+    Returns:
+        Matcher for values that are either `null` or match the given value.
+    """
+    if isinstance(value, AbstractMatcher):
+        return OrMatcher(value, none())
+    return OrMatcher(GenericMatcher("type"), none(), value=value)

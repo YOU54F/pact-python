@@ -290,6 +290,19 @@ Common matcher types include:
 -   **Pattern matchers**: `match.regex()`, `match.uuid()` - validate specific formats
 -   **Collection matchers**: `match.each_like()`, `match.array_containing()` - handle arrays and objects
 -   **Date/time matchers**: `match.date()`, `match.time()`, `match.datetime()` - flexible timestamp handling
+-   **Alternative matchers**: `match.any_of()` (or the `|` operator), `match.nullable()` - accept a value matching any one of several matchers
+
+```python
+response = {
+    "nickname": match.nullable(match.str("Al")),  # a string or null
+    "address": match.nullable({  # an object or null
+        "street": match.str("Main St"),
+        "number": match.int(42),  # still applied when the address is present
+    }),
+}
+```
+
+Only the example value is used in the consumer test, so the code under test only ever sees an address object; the `null` alternative is only checked during provider verification. Alternative matchers require a version of the Pact FFI with support for `pact:matcher:combine` ([pact-reference#601](https://github.com/pact-foundation/pact-reference/pull/601); TODO: minimum `pact_ffi` version).
 
 Matchers ensure your contracts focus on data structure and semantics rather than brittle exact values, making tests more robust and maintainable.
 
