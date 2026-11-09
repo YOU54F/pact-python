@@ -89,3 +89,18 @@ def broker_url(request: pytest.FixtureRequest) -> Generator[str, Any, None]:
     ) as _:
         yield "http://pactbroker:pactbroker@localhost:9292"
     return
+
+
+def pytest_bdd_apply_tag(tag: str, function: object) -> bool | None:  # noqa: ARG001
+    """
+    Skip turning plugin and transport tags into pytest markers.
+
+    The V4 plugin features tag scenarios with `@plugin:<name>` and
+    `@transport:<name>`, which are not valid marker names.
+
+    Returns:
+        `True` if the tag has been handled, or `None` to use the default.
+    """
+    if tag == "plugin" or tag.startswith(("plugin:", "transport:")):
+        return True
+    return None
