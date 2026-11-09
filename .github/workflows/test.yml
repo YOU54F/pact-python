@@ -56,7 +56,8 @@ jobs:
       Test Python ${{ matrix.python-version }}
       on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
 
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # TEMP: run on draft PRs to test the fork FFI prerelease, revert before merge.
+    if: true
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -135,7 +136,8 @@ jobs:
       Test Python Example ${{ matrix.python-version }}
       on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
 
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # TEMP: run on draft PRs to test the fork FFI prerelease, revert before merge.
+    if: true
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -193,7 +195,8 @@ jobs:
 
   format:
     name: Format
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # TEMP: run on draft PRs to test the fork FFI prerelease, revert before merge.
+    if: true
     runs-on: ubuntu-latest
 
     steps:
@@ -221,7 +224,8 @@ jobs:
         run: hatch run format --check --output-format github
   lint:
     name: Lint
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # TEMP: run on draft PRs to test the fork FFI prerelease, revert before merge.
+    if: true
     runs-on: ubuntu-latest
 
     steps:
@@ -250,7 +254,8 @@ jobs:
 
   typecheck:
     name: Typecheck
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # TEMP: run on draft PRs to test the fork FFI prerelease, revert before merge.
+    if: true
     runs-on: ubuntu-latest
 
     steps:
@@ -275,7 +280,8 @@ jobs:
 
   prek:
     name: Prek
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # TEMP: run on draft PRs to test the fork FFI prerelease, revert before merge.
+    if: true
     runs-on: ubuntu-latest
 
     steps:
