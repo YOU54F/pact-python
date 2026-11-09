@@ -28,7 +28,11 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, MutableMapping, Sequence
 
 PKG_DIR = Path(__file__).parent.resolve() / "src" / "pact_ffi"
-PACT_RELEASE_URL = "https://github.com/pact-foundation/pact-reference/releases/download/pact_ffi-v{version}"
+# TEMP: fork prerelease, revert before merge.
+PACT_RELEASE_URL = (
+    "https://github.com/YOU54F/pact-reference/releases/download/pact_ffi-v{version}"
+)
+PACT_FFI_VERSION_OVERRIDE = "0.5.13-rc.1"
 
 
 def _stable_abi() -> str:
@@ -133,6 +137,7 @@ class PactBuildHook(BuildHookInterface[Any]):
                 incompatible platform).
         """
         ffi_version = ".".join(self.metadata.version.split(".")[:3])
+        ffi_version = PACT_FFI_VERSION_OVERRIDE  # TEMP: revert before merge
         if not ffi_version:
             msg = "Failed to determine Pact FFI version."
             self.app.display_error(msg)
